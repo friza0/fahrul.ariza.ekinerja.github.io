@@ -127,7 +127,19 @@
         function loadPDF(pdfName, month, page = 1) {
             const basePath = `pdfs/${month}`;
             const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+
+            // Check if the device is mobile
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
+
+            // Use Google Docs viewer for mobile
+            if (isMobile) {
+                const encodedUrl = encodeURIComponent(fullUrl);
+                pdfViewer.src = `https://docs.google.com/gview?embedded=true&url=${encodedUrl}`;
+            } else {
+                // Use iframe for desktop
+                pdfViewer.src = `${fullUrl}#page=${page}`;
+            }
 
             setTimeout(() => {
                 const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
