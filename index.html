@@ -124,37 +124,40 @@
             return daysInMonth[month - 1];
         }
 
-        function loadPDF(pdfName, month, page = 1) {
-            const basePath = `pdfs/${month}`;
-            const pdfViewer = document.getElementById('pdfViewer');
+function loadPDF(pdfName, month, page = 1) {
+    const basePath = `pdfs/${month}`;
+    const pdfViewer = document.getElementById('pdfViewer');
 
-            // Check if the device is mobile
-            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-            const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
+    // Check if the device is mobile
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
 
-            // Use Google Docs viewer for mobile
-            if (isMobile) {
-                const encodedUrl = encodeURIComponent(fullUrl);
-                pdfViewer.src = `https://docs.google.com/gview?embedded=true&url=${encodedUrl}`;
-            } else {
-                // Use iframe for desktop
-                pdfViewer.src = `${fullUrl}#page=${page}`;
-            }
+    // Ensure the URL is properly formatted
+    const encodedUrl = encodeURIComponent(fullUrl);
 
-            setTimeout(() => {
-                const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
-                    `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
-                );
+    // Use Google Docs viewer for mobile
+    if (isMobile) {
+        pdfViewer.src = `https://docs.google.com/gview?embedded=true&url=${encodedUrl}`;
+    } else {
+        // Use iframe for desktop
+        pdfViewer.src = `${fullUrl}#page=${page}`;
+    }
 
-                const notification = document.getElementById('notification');
-                if (expectedPdfNames.includes(pdfName)) {
-                    notification.innerText = '';
-                } else {
-                    notification.innerText = 'File tidak ditemukan';
-                    pdfViewer.src = '';
-                }
-            }, 1000);
+    setTimeout(() => {
+        const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
+            `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
+        );
+
+        const notification = document.getElementById('notification');
+        if (expectedPdfNames.includes(pdfName)) {
+            notification.innerText = '';
+        } else {
+            notification.innerText = 'File tidak ditemukan';
+            pdfViewer.src = '';
         }
+    }, 1000);
+}
+
 
         function updateDays(month) {
             const daySelect = document.getElementById('daySelect');
