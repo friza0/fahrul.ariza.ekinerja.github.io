@@ -127,7 +127,14 @@
         function loadPDF(pdfName, month, page = 1) {
             const basePath = `pdfs/${month}`;
             const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                const googleDocsURL = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(`${window.location.origin}/${basePath}/${pdfName}#page=${page}`)}`;
+                pdfViewer.src = googleDocsURL;
+            } else {
+                pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+            }
 
             setTimeout(() => {
                 const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
