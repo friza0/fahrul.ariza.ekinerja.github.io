@@ -124,25 +124,35 @@
             return daysInMonth[month - 1];
         }
 
-        function loadPDF(pdfName, month, page = 1) {
-            const basePath = `pdfs/${month}`;
-            const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+function loadPDF(pdfName, month, page = 1) {
+    const basePath = `https://friza0.github.io/fahrul.ariza.ekinerja.github.io/pdfs/${month}`;
+    const pdfViewer = document.getElementById('pdfViewer');
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-            setTimeout(() => {
-                const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
-                    `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
-                );
+    if (isMobile) {
+        // Gunakan Google Docs Viewer untuk browser mobile
+        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${basePath}/${pdfName}&page=${page}`;
+        pdfViewer.src = googleDocsUrl;
+    } else {
+        // Muat PDF langsung dalam iframe untuk desktop
+        pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+    }
 
-                const notification = document.getElementById('notification');
-                if (expectedPdfNames.includes(pdfName)) {
-                    notification.innerText = '';
-                } else {
-                    notification.innerText = 'File tidak ditemukan';
-                    pdfViewer.src = '';
-                }
-            }, 1000);
+    setTimeout(() => {
+        const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
+            `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
+        );
+
+        const notification = document.getElementById('notification');
+        if (expectedPdfNames.includes(pdfName)) {
+            notification.innerText = '';
+        } else {
+            notification.innerText = 'File tidak ditemukan';
+            pdfViewer.src = '';
         }
+    }, 1000);
+}
+
 
         function updateDays(month) {
             const daySelect = document.getElementById('daySelect');
