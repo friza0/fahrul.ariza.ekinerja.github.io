@@ -194,10 +194,17 @@ function loadSelectedPDF() {
 }
 
 function updateURL(month, pdfName, page = 1) {
-    const day = pdfName.match(/\d{2}/)[0]; // Ambil hari dari nama file
+    // Ambil hari dari nama file PDF
+    const dayMatch = pdfName.match(/(\d{2})(?=\..*pdf$)/);
+    const day = dayMatch ? dayMatch[0] : '01'; // Jika tidak ditemukan, gunakan hari default '01'
+    
+    // Buat URL baru dengan parameter month, day, dan page
     const newUrl = `${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
-    window.history.replaceState({}, '', newUrl); // Perbarui URL tanpa reload halaman
+    
+    // Perbarui URL di browser tanpa reload halaman
+    window.history.replaceState({}, '', newUrl);
 }
+
 
         function loadFromURL() {
             const params = new URLSearchParams(window.location.search);
