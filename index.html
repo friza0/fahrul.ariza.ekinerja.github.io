@@ -55,12 +55,6 @@
             align-items: center;
             overflow: hidden;
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            overflow: auto;
-        }
         .home-button {
             display: block;
             margin: 0 auto 20px;
@@ -101,6 +95,7 @@
             display: inline-block;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script>
         function showWelcomeScreen() {
             document.getElementById('welcomeScreen').style.display = 'block';
@@ -124,46 +119,56 @@
             return daysInMonth[month - 1];
         }
 
-function loadPDF(pdfName, month, page = 1) {
-    const basePath = `pdfs/${month}`;
-    const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
-    const pdfViewer = document.getElementById('pdfViewer');
+        function loadPDF(pdfName, month, page = 1) {
+            const basePath = `pdfs/${month}`;
+            const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
+            const pdfViewer = document.getElementById('pdfViewer');
 
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-    if (isMobile) {
-        // For mobile, directly use PDF.js
-        pdfViewer.src = ''; // Clear iframe
-        const canvas = document.createElement('canvas');
-        pdfViewer.appendChild(canvas);
-        const loadingTask = pdfjsLib.getDocument(fullUrl);
-        
-        loadingTask.promise.then(pdf => {
-            pdf.getPage(page).then(page => {
-                const scale = 1.5; // Adjust scale as needed
-                const viewport = page.getViewport({ scale: scale });
+            if (isMobile) {
+                // For mobile, use PDF.js
+                pdfViewer.innerHTML = ''; // Clear previous content
+                const canvas = document.createElement('canvas');
+                pdfViewer.appendChild(canvas);
+                const loadingTask = pdfjsLib.getDocument(fullUrl);
+                
+                loadingTask.promise.then(pdf => {
+                    pdf.getPage(page).then(page => {
+                        const scale = 1.5; // Adjust scale as needed
+                        const viewport = page.getViewport({ scale: scale });
 
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
 
-                const renderContext = {
-                    canvasContext: canvas.getContext('2d'),
-                    viewport: viewport
-                };
-                page.render(renderContext);
-            });
-        }).catch(error => {
-            document.getElementById('notification').innerText = 'PDF tidak dapat dimuat.';
-        });
-    } else {
-        // Use iframe for desktop
-        pdfViewer.src = `${fullUrl}#page=${page}`;
-    }
+                        const renderContext = {
+                            canvasContext: canvas.getContext('2d'),
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }).catch(error => {
+                    document.getElementById('notification').innerText = 'PDF tidak dapat dimuat.';
+                });
+            } else {
+                // Use iframe for desktop
+                pdfViewer.innerHTML = `<iframe src="${fullUrl}#page=${page}" style="width: 100%; height: 100%; border: none;"></iframe>`;
+            }
 
-    // Notification logic remains unchanged...
-}
+            setTimeout(() => {
+                const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
+                    `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
+                );
 
-
+                const notification = document.getElementById('notification');
+                if (expectedPdfNames.includes(pdfName)) {
+                    notification.innerText = '';
+                } else {
+                    notification.innerText = 'File tidak ditemukan';
+                    pdfViewer.innerHTML = ''; // Clear viewer
+                }
+            }, 1000);
+        }
 
         function updateDays(month) {
             const daySelect = document.getElementById('daySelect');
@@ -246,104 +251,45 @@ function loadPDF(pdfName, month, page = 1) {
                 dummy.select();
                 document.execCommand('copy');
                 document.body.removeChild(dummy);
-                alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
+                alert('Link telah disalin: ' + link);
             } else {
-                alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
+                alert('Silakan pilih dokumen terlebih dahulu.');
             }
         }
-
-        function handlePaste(event) {
-            const pasteData = event.clipboardData.getData('text');
-            const urlParams = new URLSearchParams(pasteData.split('?')[1]);
-            const month = urlParams.get('month');
-            const day = urlParams.get('day');
-            const page = urlParams.get('page') || 1;
-
-            if (month && day) {
-                const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
-                document.getElementById('monthSelect').value = month;
-                const daySelect = document.getElementById('daySelect');
-                daySelect.value = pdfName;
-                document.getElementById('pageInput').value = page;
-                loadPDF(pdfName, month, page);
-            }
-        }
-
-        function detectDevice() {
-            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-            const welcomeScreen = document.getElementById('welcomeScreen');
-            
-            if (isMobile) {
-                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat mobile.</p>";
-            } else {
-                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat desktop.</p>";
-            }
-        }
-
-        window.onload = function() {
-            loadFromURL();
-            detectDevice();
-        };
-        window.addEventListener('paste', handlePaste);
     </script>
 </head>
-<body>
-    <div id="welcomeScreen" class="welcome-container">
-        <center><h1>Dokumentasi E-Kinerja</h1></center>
-        <p>Selamat datang di sistem dokumen E-Kinerja.<br>
-        Silakan pilih bulan dan dokumen yang ingin Anda lihat.</p>
-        <h3>Identitas</h3>
-        <table>
-            <tr>
-                <td><strong>NAMA</strong></td>
-                <td>Fahrul Ariza</td>
-            </tr>
-            <tr>
-                <td><strong>NIP</strong></td>
-                <td>199004232022031003</td>
-            </tr>
-            <tr>
-                <td><strong>JABATAN</strong></td>
-                <td>Perawat Terampil</td>
-            </tr>
-            <tr>
-                <td><strong>Unit</strong></td>
-                <td>UPTD Puskesmas Rantau Pulut I</td>
-            </tr>
-        </table>
-        <button class="home-button" onclick="proceedToSelection()">Pilih Dokumen</button>
+<body onload="loadFromURL()">
+    <div id="welcomeScreen">
+        <h1>Selamat Datang</h1>
+        <button class="home-button" onclick="proceedToSelection()">Mulai</button>
+    </div>
+    
+    <div id="documentSelection" style="display:none;">
+        <h1>Pilih Dokumen E-Kinerja</h1>
+        <div class="nav-container">
+            <select id="monthSelect" onchange="updateDays(this.value)">
+                <option value="">Pilih Bulan</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <option value="04">April</option>
+                <option value="05">Mei</option>
+                <option value="06">Juni</option>
+                <option value="07">Juli</option>
+                <option value="08">Agustus</option>
+                <option value="09">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+            </select>
+            <select id="daySelect"></select>
+            <input type="number" id="pageInput" placeholder="Halaman" min="1" value="1">
+            <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
+            <button onclick="copyLink()">Salin Link</button>
+        </div>
+        <div id="notification" class="notification"></div>
     </div>
 
-    <div id="documentSelection" class="nav-container" style="display: none;">
-        <select id="monthSelect" onchange="updateDays(this.value)">
-            <option value="">Pilih Bulan</option>
-            <option value="01">Januari</option>
-            <option value="02">Februari</option>
-            <option value="03">Maret</option>
-            <option value="04">April</option>
-            <option value="05">Mei</option>
-            <option value="06">Juni</option>
-            <option value="07">Juli</option>
-            <option value="08">Agustus</option>
-            <option value="09">September</option>
-            <option value="10">Oktober</option>
-            <option value="11">November</option>
-            <option value="12">Desember</option>
-        </select>
-
-        <select id="daySelect"></select>
-
-        <input id="pageInput" type="number" placeholder="Halaman" min="1">
-
-        <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
-        <button onclick="copyLink()">Salin Link</button>
-        <button class="home-button" onclick="window.location.href='index.html'">Halaman Utama</button>
-    </div>
-
-    <div id="notification" class="notification"></div>
-
-    <div class="pdf-container">
-        <iframe id="pdfViewer"></iframe>
-    </div>
+    <div class="pdf-container" id="pdfViewer" style="display:none;"></div>
 </body>
 </html>
