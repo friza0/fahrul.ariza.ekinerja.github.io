@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumen E-Kinerja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative; /* Added for positioning the button */
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        .nav-container, .welcome-container {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Space between elements */
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+            border: 1px solid #444;
+            border-radius: 5px;
+            flex: 1; /* Allow inputs to grow equally */
+        }
+        button {
+            cursor: pointer;
+            background-color: #007BFF;
+        }
+        button:hover {
+            background-color: #444;
+        }
+        .pdf-container {
+            flex: 1; /* Allow the PDF container to fill the remaining space */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto; /* Allow scrolling if necessary */
+        }
+        .home-button {
+            display: block;
+            margin: 0 auto 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .home-button:hover {
+            background-color: #0056b3;
+        }
+        .notification {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            button {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+    <script>
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'block';
+            document.getElementById('documentSelection').style.display = 'none';
+            document.getElementById('pdfViewer').style.display = 'none';
+        }
+
+        function proceedToSelection() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('documentSelection').style.display = 'block';
+            document.getElementById('pdfViewer').style.display = 'block';
+            document.getElementById('notification').innerText = '';
+        }
+
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        }
+
+        function getDaysInMonth(year, month) {
+            const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            return daysInMonth[month - 1];
+        }
+
+        // Load PDF with page number
+        function loadPDF(pdfName, month, page = 1) {
+            const basePath = `pdfs/${month}`;
+            const pdfViewer = document.getElementById('pdfViewer');
+            
+            // Load PDF with the correct page number
+            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
+
+            // Optional check for PDF existence (delayed to wait for iframe load)
+            setTimeout(() => {
+                const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
+                    `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
+                );
+
+                const notification = document.getElementById('notification');
+                if (expectedPdfNames.includes(pdfName)) {
+                    notification.innerText = '';
+                } else {
+                    notification.innerText = 'File tidak ditemukan';
+                    pdfViewer.src = '';  // Reset if file not found
+                }
+            }, 1000);
+        }
+
+        function updateDays(month) {
+            const daySelect = document.getElementById('daySelect');
+            daySelect.innerHTML = '';
+
+            const year = 2024;
+            const daysInMonth = getDaysInMonth(year, parseInt(month));
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayString = day.toString().padStart(2, '0');
+                const pdfName = `ekinerja-${year}-${month}-${dayString}.pdf`;
+
+                const option = document.createElement('option');
+                option.value = pdfName;
+                option.textContent = `Dokumen ${dayString} ${getMonthName(month)} ${year}`;
+                daySelect.appendChild(option);
+            }
+        }
+
+        function getMonthName(month) {
+            const monthNames = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ];
+            return monthNames[parseInt(month) - 1];
+        }
+
+        function loadSelectedPDF() {
+            const monthSelect = document.getElementById('monthSelect');
+            const daySelect = document.getElementById('daySelect');
+            const pageInput = document.getElementById('pageInput');
+
+            if (monthSelect.value && daySelect.value) {
+                const page = pageInput.value || 1;
+                loadPDF(daySelect.value, monthSelect.value, page);
+                updateURL(monthSelect.value, daySelect.value, page);
+            }
+        }
+
+        // Update URL with month, day, and page
+        function updateURL(month, pdfName, page = 1) {
+            const day = pdfName.match(/\d{2}/)[0];  // Extract day from file name
+            const newUrl = `${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        // Load PDF and page from URL parameters
+function loadFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const month = params.get('month');
+    const day = params.get('day');
+    const page = params.get('page') || 1;
+
+    if (month && day) {
+        const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
+        document.getElementById('daySelect').value = pdfName;
+        loadPDF(pdfName, month, page);
+        document.getElementById('monthSelect').value = month; // Set month in dropdown
+        updateDays(month); // Update day dropdown for selected month
+        document.getElementById('pageInput').value = page; // Set the page number
+        document.getElementById('welcomeScreen').style.display = 'none'; // Hide welcome screen
+        document.getElementById('documentSelection').style.display = 'block'; // Show document selection
+    } else {
+        showWelcomeScreen();
+    }
+}
+
+
+        // Function to copy link with current page
+        function copyLink() {
+            const monthSelect = document.getElementById('monthSelect');
+            const daySelect = document.getElementById('daySelect');
+            const pageInput = document.getElementById('pageInput');
+
+            if (monthSelect.value && daySelect.value) {
+                const month = monthSelect.value;
+                const day = daySelect.value.match(/\d{2}/)[0];  // Extract day from file name
+                const page = pageInput.value || 1;
+                const link = `${window.location.origin}${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = link;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
+            } else {
+                alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
+            }
+        }
+
+        // Function to handle paste event
+        function handlePaste(event) {
+            const pasteData = event.clipboardData.getData('text');
+            const urlParams = new URLSearchParams(pasteData.split('?')[1]);
+            const month = urlParams.get('month');
+            const day = urlParams.get('day');
+            const page = urlParams.get('page') || 1;
+
+            if (month && day) {
+                const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
+                document.getElementById('monthSelect').value = month;
+                const daySelect = document.getElementById('daySelect');
+                daySelect.value = pdfName;
+                document.getElementById('pageInput').value = page; // Set page number
+                loadPDF(pdfName, month, page);
+            }
+        }
+
+        // Initialize on load
+        window.onload = loadFromURL;
+        window.addEventListener('paste', handlePaste);
+    </script>
+</head>
+<body>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #ddd; /* Optional border for clarity */
+        }
+        strong {
+            text-align: left;
+            width: 70px; /* Adjust width as needed */
+            display: inline-block; /* To align labels and values */
+        }
+    </style>
+    <button class="home-button" style="position: absolute; top: 20px; right: 20px;" onclick="window.location.href='index.html'">Halaman Utama</button>
+    
+    <div id="welcomeScreen" class="welcome-container">
+		<center><h1>Dokumentasi E-Kinerja</h1></center>
+        <p>Selamat datang di sistem dokumen E-Kinerja.<br>
+		Silakan pilih bulan dan dokumen yang ingin Anda lihat.</p>
+		<h3>Identitas</h3>
+		<table>
+			<tr>
+				<td><strong>NAMA</strong></td>
+				<td>Fahrul Ariza</td>
+			</tr>
+			<tr>
+				<td><strong>NIP</strong></td>
+				<td>199004232022031003</td>
+			</tr>
+			<tr>
+				<td><strong>JABATAN</strong></td>
+				<td>Perawat Terampil</td>
+			</tr>
+			<tr>
+				<td><strong>Unit</strong></td>
+				<td>UPTD Puskesmas Rantau Pulut I</td>
+			</tr>
+		</table>
+        <button class="home-button" onclick="proceedToSelection()">Pilih Dokumen</button>
+    </div>
+
+    <div id="documentSelection" class="nav-container" style="display: none;">
+        <select id="monthSelect" onchange="updateDays(this.value)">
+            <option value="">Pilih Bulan</option>
+            <option value="01">Januari</option>
+            <option value="02">Februari</option>
+            <option value="03">Maret</option>
+            <option value="04">April</option>
+            <option value="05">Mei</option>
+            <option value="06">Juni</option>
+            <option value="07">Juli</option>
+            <option value="08">Agustus</option>
+            <option value="09">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+        </select>
+
+        <select id="daySelect"></select>
+
+        <input id="pageInput" type="number" placeholder="Halaman" min="1">
+
+        <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
+        <button onclick="copyLink()">Salin Link</button>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <div class="pdf-container">
+        <iframe id="pdfViewer"></iframe>
+    </div>
+</body>
+</html>
