@@ -55,6 +55,12 @@
             align-items: center;
             overflow: hidden;
         }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto;
+        }
         .home-button {
             display: block;
             margin: 0 auto 20px;
@@ -95,10 +101,7 @@
             display: inline-block;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script>
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-
         function showWelcomeScreen() {
             document.getElementById('welcomeScreen').style.display = 'block';
             document.getElementById('documentSelection').style.display = 'none';
@@ -123,39 +126,8 @@
 
         function loadPDF(pdfName, month, page = 1) {
             const basePath = `pdfs/${month}`;
-            const fullUrl = `${window.location.origin}/${basePath}/${pdfName}`;
             const pdfViewer = document.getElementById('pdfViewer');
-
-            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                // For mobile, use PDF.js
-                pdfViewer.innerHTML = ''; // Clear previous content
-                const canvas = document.createElement('canvas');
-                pdfViewer.appendChild(canvas);
-                const loadingTask = pdfjsLib.getDocument(fullUrl);
-                
-                loadingTask.promise.then(pdf => {
-                    pdf.getPage(page).then(page => {
-                        const scale = 1.5; // Adjust scale as needed
-                        const viewport = page.getViewport({ scale: scale });
-
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-
-                        const renderContext = {
-                            canvasContext: canvas.getContext('2d'),
-                            viewport: viewport
-                        };
-                        page.render(renderContext);
-                    });
-                }).catch(error => {
-                    document.getElementById('notification').innerText = 'PDF tidak dapat dimuat.';
-                });
-            } else {
-                // Use iframe for desktop
-                pdfViewer.innerHTML = `<iframe src="${fullUrl}#page=${page}" style="width: 100%; height: 100%; border: none;"></iframe>`;
-            }
+            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
 
             setTimeout(() => {
                 const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
@@ -167,7 +139,7 @@
                     notification.innerText = '';
                 } else {
                     notification.innerText = 'File tidak ditemukan';
-                    pdfViewer.innerHTML = ''; // Clear viewer
+                    pdfViewer.src = '';
                 }
             }, 1000);
         }
@@ -253,13 +225,45 @@
                 dummy.select();
                 document.execCommand('copy');
                 document.body.removeChild(dummy);
-                alert('Link telah disalin: ' + link);
+                alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
             } else {
-                alert('Silakan pilih dokumen terlebih dahulu.');
+                alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
             }
         }
 
-        window.onload = loadFromURL;
+        function handlePaste(event) {
+            const pasteData = event.clipboardData.getData('text');
+            const urlParams = new URLSearchParams(pasteData.split('?')[1]);
+            const month = urlParams.get('month');
+            const day = urlParams.get('day');
+            const page = urlParams.get('page') || 1;
+
+            if (month && day) {
+                const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
+                document.getElementById('monthSelect').value = month;
+                const daySelect = document.getElementById('daySelect');
+                daySelect.value = pdfName;
+                document.getElementById('pageInput').value = page;
+                loadPDF(pdfName, month, page);
+            }
+        }
+
+        function detectDevice() {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            
+            if (isMobile) {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat mobile.</p>";
+            } else {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat desktop.</p>";
+            }
+        }
+
+        window.onload = function() {
+            loadFromURL();
+            detectDevice();
+        };
+        window.addEventListener('paste', handlePaste);
     </script>
 </head>
 <body>
@@ -308,7 +312,7 @@
 
         <select id="daySelect"></select>
 
-        <input id="pageInput" type="number" placeholder="Halaman" min="1" value="1">
+        <input id="pageInput" type="number" placeholder="Halaman" min="1">
 
         <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
         <button onclick="copyLink()">Salin Link</button>
@@ -317,6 +321,8 @@
 
     <div id="notification" class="notification"></div>
 
-    <div class="pdf-container" id="pdfViewer"></div>
+    <div class="pdf-container">
+        <iframe id="pdfViewer"></iframe>
+    </div>
 </body>
 </html>
