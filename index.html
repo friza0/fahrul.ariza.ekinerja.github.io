@@ -226,28 +226,35 @@ function updateURL(month, pdfName, page = 1) {
             }
         }
 
-        function copyLink() {
-            const monthSelect = document.getElementById('monthSelect');
-            const daySelect = document.getElementById('daySelect');
-            const pageInput = document.getElementById('pageInput');
+function copyLink() {
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
+    const pageInput = document.getElementById('pageInput');
 
-            if (monthSelect.value && daySelect.value) {
-                const month = monthSelect.value;
-                const day = daySelect.value.match(/\d{2}/)[0];
-                const page = pageInput.value || 1;
-                const link = `${window.location.origin}${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+    if (monthSelect.value && daySelect.value) {
+        const month = monthSelect.value;
+        // Ambil hari dari nama file dengan regex yang lebih spesifik
+        const dayMatch = daySelect.value.match(/-(\d{2})\.pdf$/);
+        const day = dayMatch ? dayMatch[1] : '01'; // Gunakan fallback ke '01' jika tidak ditemukan
+        const page = pageInput.value || 1;
 
-                const dummy = document.createElement('input');
-                document.body.appendChild(dummy);
-                dummy.value = link;
-                dummy.select();
-                document.execCommand('copy');
-                document.body.removeChild(dummy);
-                alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
-            } else {
-                alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
-            }
-        }
+        // Buat URL yang diperbarui
+        const link = `${window.location.origin}${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+
+        // Salin link ke clipboard
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = link;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+
+        alert('Link telah disalin! Link akan membuka dokumen untuk tanggal yang dipilih.');
+    } else {
+        alert('Silakan pilih bulan dan dokumen terlebih dahulu.');
+    }
+}
+
 
         function handlePaste(event) {
             const pasteData = event.clipboardData.getData('text');
