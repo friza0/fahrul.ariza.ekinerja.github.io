@@ -97,6 +97,8 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script>
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+
         function showWelcomeScreen() {
             document.getElementById('welcomeScreen').style.display = 'block';
             document.getElementById('documentSelection').style.display = 'none';
@@ -256,40 +258,65 @@
                 alert('Silakan pilih dokumen terlebih dahulu.');
             }
         }
+
+        window.onload = loadFromURL;
     </script>
 </head>
-<body onload="loadFromURL()">
-    <div id="welcomeScreen">
-        <h1>Selamat Datang</h1>
-        <button class="home-button" onclick="proceedToSelection()">Mulai</button>
-    </div>
-    
-    <div id="documentSelection" style="display:none;">
-        <h1>Pilih Dokumen E-Kinerja</h1>
-        <div class="nav-container">
-            <select id="monthSelect" onchange="updateDays(this.value)">
-                <option value="">Pilih Bulan</option>
-                <option value="01">Januari</option>
-                <option value="02">Februari</option>
-                <option value="03">Maret</option>
-                <option value="04">April</option>
-                <option value="05">Mei</option>
-                <option value="06">Juni</option>
-                <option value="07">Juli</option>
-                <option value="08">Agustus</option>
-                <option value="09">September</option>
-                <option value="10">Oktober</option>
-                <option value="11">November</option>
-                <option value="12">Desember</option>
-            </select>
-            <select id="daySelect"></select>
-            <input type="number" id="pageInput" placeholder="Halaman" min="1" value="1">
-            <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
-            <button onclick="copyLink()">Salin Link</button>
-        </div>
-        <div id="notification" class="notification"></div>
+<body>
+    <div id="welcomeScreen" class="welcome-container">
+        <center><h1>Dokumentasi E-Kinerja</h1></center>
+        <p>Selamat datang di sistem dokumen E-Kinerja.<br>
+        Silakan pilih bulan dan dokumen yang ingin Anda lihat.</p>
+        <h3>Identitas</h3>
+        <table>
+            <tr>
+                <td><strong>NAMA</strong></td>
+                <td>Fahrul Ariza</td>
+            </tr>
+            <tr>
+                <td><strong>NIP</strong></td>
+                <td>199004232022031003</td>
+            </tr>
+            <tr>
+                <td><strong>JABATAN</strong></td>
+                <td>Perawat Terampil</td>
+            </tr>
+            <tr>
+                <td><strong>Unit</strong></td>
+                <td>UPTD Puskesmas Rantau Pulut I</td>
+            </tr>
+        </table>
+        <button class="home-button" onclick="proceedToSelection()">Pilih Dokumen</button>
     </div>
 
-    <div class="pdf-container" id="pdfViewer" style="display:none;"></div>
+    <div id="documentSelection" class="nav-container" style="display: none;">
+        <select id="monthSelect" onchange="updateDays(this.value)">
+            <option value="">Pilih Bulan</option>
+            <option value="01">Januari</option>
+            <option value="02">Februari</option>
+            <option value="03">Maret</option>
+            <option value="04">April</option>
+            <option value="05">Mei</option>
+            <option value="06">Juni</option>
+            <option value="07">Juli</option>
+            <option value="08">Agustus</option>
+            <option value="09">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+        </select>
+
+        <select id="daySelect"></select>
+
+        <input id="pageInput" type="number" placeholder="Halaman" min="1" value="1">
+
+        <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
+        <button onclick="copyLink()">Salin Link</button>
+        <button class="home-button" onclick="window.location.href='index.html'">Halaman Utama</button>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <div class="pdf-container" id="pdfViewer"></div>
 </body>
 </html>
