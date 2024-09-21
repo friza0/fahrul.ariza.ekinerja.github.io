@@ -138,6 +138,9 @@ function loadPDF(pdfName, month, page = 1) {
         pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
     }
 
+    // Perbarui URL dengan parameter bulan, hari, dan halaman
+    updateURL(month, pdfName, page);
+
     setTimeout(() => {
         const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
             `ekinerja-2024-${month}-${String(i + 1).padStart(2, '0')}.pdf`
@@ -152,7 +155,6 @@ function loadPDF(pdfName, month, page = 1) {
         }
     }, 1000);
 }
-
 
         function updateDays(month) {
             const daySelect = document.getElementById('daySelect');
@@ -180,23 +182,22 @@ function loadPDF(pdfName, month, page = 1) {
             return monthNames[parseInt(month) - 1];
         }
 
-        function loadSelectedPDF() {
-            const monthSelect = document.getElementById('monthSelect');
-            const daySelect = document.getElementById('daySelect');
-            const pageInput = document.getElementById('pageInput');
+function loadSelectedPDF() {
+    const monthSelect = document.getElementById('monthSelect');
+    const daySelect = document.getElementById('daySelect');
+    const pageInput = document.getElementById('pageInput');
 
-            if (monthSelect.value && daySelect.value) {
-                const page = pageInput.value || 1;
-                loadPDF(daySelect.value, monthSelect.value, page);
-                updateURL(monthSelect.value, daySelect.value, page);
-            }
-        }
+    if (monthSelect.value && daySelect.value) {
+        const page = pageInput.value || 1;
+        loadPDF(daySelect.value, monthSelect.value, page); // Panggil fungsi loadPDF dan perbarui URL
+    }
+}
 
-        function updateURL(month, pdfName, page = 1) {
-            const day = pdfName.match(/\d{2}/)[0];
-            const newUrl = `${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
-            window.history.replaceState({}, '', newUrl);
-        }
+function updateURL(month, pdfName, page = 1) {
+    const day = pdfName.match(/\d{2}/)[0]; // Ambil hari dari nama file
+    const newUrl = `${window.location.pathname}?month=${month}&day=${day}&page=${page}`;
+    window.history.replaceState({}, '', newUrl); // Perbarui URL tanpa reload halaman
+}
 
         function loadFromURL() {
             const params = new URLSearchParams(window.location.search);
