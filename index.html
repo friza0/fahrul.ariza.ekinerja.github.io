@@ -127,17 +127,7 @@
         function loadPDF(pdfName, month, page = 1) {
             const basePath = `pdfs/${month}`;
             const pdfViewer = document.getElementById('pdfViewer');
-            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-            
-            // Adjusted URL path for Google Docs viewer
-            const fullUrl = `${window.location.origin}/fahrul.ariza.ekinerja.github.io/${basePath}/${pdfName}`;
-
-            if (isMobile) {
-                const googleDocsURL = `https://docs.google.com/gview?embedded=true&url=${fullUrl}&page=${page}`;
-                pdfViewer.src = googleDocsURL;
-            } else {
-                pdfViewer.src = `${fullUrl}#page=${page}`;
-            }
+            pdfViewer.src = `${basePath}/${pdfName}#page=${page}`;
 
             setTimeout(() => {
                 const expectedPdfNames = Array.from({ length: getDaysInMonth(2024, month) }, (_, i) => 
@@ -251,47 +241,88 @@
             if (month && day) {
                 const pdfName = `ekinerja-2024-${month}-${day}.pdf`;
                 document.getElementById('monthSelect').value = month;
-                updateDays(month);
-                document.getElementById('daySelect').value = pdfName;
+                const daySelect = document.getElementById('daySelect');
+                daySelect.value = pdfName;
                 document.getElementById('pageInput').value = page;
                 loadPDF(pdfName, month, page);
             }
         }
 
-        window.onload = loadFromURL;
+        function detectDevice() {
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            
+            if (isMobile) {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat mobile.</p>";
+            } else {
+                welcomeScreen.innerHTML += "<p>Anda menggunakan perangkat desktop.</p>";
+            }
+        }
+
+        window.onload = function() {
+            loadFromURL();
+            detectDevice();
+        };
+        window.addEventListener('paste', handlePaste);
     </script>
 </head>
 <body>
     <div id="welcomeScreen" class="welcome-container">
-        <h1>Selamat Datang di Halaman E-Kinerja</h1>
-        <p>Untuk mengakses dokumen kinerja Anda, silakan tekan tombol di bawah ini.</p>
-        <button onclick="proceedToSelection()" class="home-button">Lanjutkan</button>
+        <center><h1>Dokumentasi E-Kinerja</h1></center>
+        <p>Selamat datang di sistem dokumen E-Kinerja.<br>
+        Silakan pilih bulan dan dokumen yang ingin Anda lihat.</p>
+        <h3>Identitas</h3>
+        <table>
+            <tr>
+                <td><strong>NAMA</strong></td>
+                <td>Fahrul Ariza</td>
+            </tr>
+            <tr>
+                <td><strong>NIP</strong></td>
+                <td>199004232022031003</td>
+            </tr>
+            <tr>
+                <td><strong>JABATAN</strong></td>
+                <td>Perawat Terampil</td>
+            </tr>
+            <tr>
+                <td><strong>Unit</strong></td>
+                <td>UPTD Puskesmas Rantau Pulut I</td>
+            </tr>
+        </table>
+        <button class="home-button" onclick="proceedToSelection()">Pilih Dokumen</button>
     </div>
 
-    <div id="documentSelection" style="display: none;">
-        <div class="nav-container">
-            <select id="monthSelect" onchange="updateDays(this.value)">
-                <option value="09">September</option>
-                <!-- Add more months if necessary -->
-            </select>
+    <div id="documentSelection" class="nav-container" style="display: none;">
+        <select id="monthSelect" onchange="updateDays(this.value)">
+            <option value="">Pilih Bulan</option>
+            <option value="01">Januari</option>
+            <option value="02">Februari</option>
+            <option value="03">Maret</option>
+            <option value="04">April</option>
+            <option value="05">Mei</option>
+            <option value="06">Juni</option>
+            <option value="07">Juli</option>
+            <option value="08">Agustus</option>
+            <option value="09">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+        </select>
 
-            <select id="daySelect"></select>
+        <select id="daySelect"></select>
 
-            <input type="number" id="pageInput" placeholder="Halaman (1 default)" min="1">
-        </div>
+        <input id="pageInput" type="number" placeholder="Halaman" min="1">
 
-        <div class="nav-container">
-            <button onclick="loadSelectedPDF()">Muat PDF</button>
-            <button onclick="copyLink()">Salin Link</button>
-        </div>
-
-        <div class="pdf-container">
-            <iframe id="pdfViewer"></iframe>
-        </div>
-
-        <div id="notification" class="notification"></div>
+        <button onclick="loadSelectedPDF()">Tampilkan PDF</button>
+        <button onclick="copyLink()">Salin Link</button>
+        <button class="home-button" onclick="window.location.href='index.html'">Halaman Utama</button>
     </div>
 
-    <div contenteditable="true" onpaste="handlePaste(event)"></div>
+    <div id="notification" class="notification"></div>
+
+    <div class="pdf-container">
+        <iframe id="pdfViewer"></iframe>
+    </div>
 </body>
 </html>
